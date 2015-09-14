@@ -1,158 +1,57 @@
 var prompt = require('sync-prompt').prompt
+var health = 100
+var size = 20
+var position = 0
+var coins = 0
+var name = prompt('What is your name? ')
 
-var start = prompt('Welcome to the game \n Press (1) to start\n Press (2) to quit \n\t')
-start === '1' ? startGame() : null
+function main() {
+  while (health > 0 && position < size) {
+    prompt('Push any key to roll the dice! \n')
 
-function Hero (name) {
-  this.name = name || 'hero'
-  this.health = 100
-  this.position = [0, 0]
-  this.damage = 5
-  this.items = {}
-  this.getItems = getItems
-  this.move = move
-  this.combat = combat
-}
-
-function getItems () {
-  if (Object.keys(this.items).length === 0) {
-    console.log('You don\'t have any items!')
+    steps = rollDice()
+    console.log('You rolled a ' + steps)
+    position = move(position, steps)
+    damage = getMonster()
+    console.log(enterCombat(damage))
+    health = combat(health, damage)
+    coins = newCoins(coins)
+    console.log(status(position, health, coins))
   }
-  else {
-    for (var item in this.items) {
-      console.log(item)
-    }
-  }
+  win()
 }
 
-function move (level) {
-  level.level[this.position[0]][this.position[1]] = ' '
-  var direction = prompt('Which direction do you want to move?\n')
-  switch (direction) {
-    case 'left':
-      this.position[1]--
-      break
-    case 'right':
-      this.position[1]++
-      break
-    case 'up':
-      this.position[0]--
-      break
-    case 'down':
-      this.position[0]++
-      break
-  }
-  switch (level.checkSpace(this.position)) {
-    case 'm':
-      this.combat(level)
-      break
-    case 'invalid':
-      this.move(level)
-      break
-    default:
-      break
-  }
+
+function rollDice () {
+  return Math.floor(Math.random() * 6) + 1
 }
 
-function combat (level) {
-  var monsterHealth = 10
-  var monsterDamage = 2
-  console.log('You spot a monster!\n')
-  while (monsterHealth > 0) {
-    var data = 'Your health: ' + this.health + '\t Monster health: ' + monsterHealth
-    console.log(data)
-    var option = prompt('What would you like to do?\n Press (1) to attack\n Press (2) to run away\n')
-    switch (option) {
-      case '1':
-        monsterHealth -= this.damage
-        console.log('You hit monster for ' + this.damage + ' damage')
-        this.health -= monsterDamage
-        console.log('Monster hit you for ' + monsterDamage + ' damage')
-        break
-      case '2':
-        this.move(level)
-        return
-    }
-  }
+function move (p, s) {
+  return p + s
 }
 
-function Gameboard (opts) {
-  this.size = 10
-  this.getMonsters = getMonsters
-  this.setMonsters = setMonsters
-  this.setLevel = setLevel
-  this.checkSpace = checkSpace
-  this.draw = draw
-  this.monsters = this.getMonsters()
-  this.level = this.setLevel()
-  this.setMonsters()
+function enterCombat (d) {
+  return ' You encounter a monster! \n The monster hits you for ' + d + ' damage.\n You have defeated the monster.\n'
 }
 
-function checkSpace (pos) {
-  return this.level[pos[0]][pos[1]] || 'invalid'
+function getMonster () {
+  return Math.floor(Math.random() * 10) + 1
 }
 
-function setMonsters () {
-  var that = this
-  this.monsters.forEach(function (monster) {
-    that.level[monster[0]][monster[1]] = 'm'
-  })
+function combat (h, d) {
+  return h - d
 }
 
-function setLevel () {
-  var level = []
-  for (var i = 0; i < this.size; i++) {
-    var row = []
-    for (var j = 0; j < this.size; j++) {
-      row.push(' ')
-    }
-    level.push(row)
-  }
-  return level
+function newCoins (c) {
+  return c + Math.floor(Math.random() * 5) + 1
 }
 
-function draw (hero) {
-  this.level[hero.position[0]][hero.position[1]] = 'h'
-  console.log(this.level)
+function status (p, h, c) {
+  return 'Position: ' + p + '\nHealth: ' + h + '\nCoins: ' + c
 }
 
-function getMonsters () {
-  var monsters = []
-  for (var i = 0; i < 5; i++) {
-    var randX = Math.floor(Math.random() * (this.size - 1))
-    var randY = Math.floor(Math.random() * (this.size - 1))
-    monsters.push([randX, randY])
-  }
-  return monsters
+function win () {
+  console.log('Congratulations, ' + name)
 }
 
-function startGame () {
-  var level = new Gameboard()
-  var myHero = new Hero()
-  while (myHero.health > 0) {
-    level.draw(myHero)
-    nextAction(myHero, level)
-  }
-}
-
-function nextAction (myHero, level) {
-  var move = prompt('What would you like to do?\n' +
-    ' Press (1) to check inventory\n' +
-    ' Press (2) to move\n' +
-    ' Press (3) to quit\n')
-  switch (move) {
-    case '1':
-      myHero.getItems()
-      break
-    case '2':
-      myHero.move(level)
-      break
-    case '3':
-      process.exit()
-      break
-    default:
-      console.log('Invalid response!')
-      nextAction(myHero)
-      break
-  }
-}
+main()
